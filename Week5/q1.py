@@ -40,8 +40,48 @@ def Harris_Corners(img:cv.Mat, ksize=3, threshold=0.01):
 
     return out
 
+def FAST_Corners(img:cv.Mat, n=12, treshold=10):
+    img_gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+    height, width, _ = img.shape
 
-img = Harris_Corners(img)
-cv.imshow('Image', img)
+    miniCircle = [(-3, 0), (3, 0), (0, -3), (0, 3)]
+    bresenhamCircle = [(0, 3), (1, 3), (2, 2), (3, 1), (3, 0), (3, -1), (2, -2), (1, -3), (0, -3), (-1, -3), (-2, -2), (-3, -1), (-3, 0), (-3, 1), (-2, 2), (-1, 3)]
+
+    def isActivePixel(I, curI, treshold):
+        return I > curI + treshold or I < curI - treshold
+    
+    output = img.copy()
+
+    for i in range(3, height - 3):
+        for j in range(3, width - 3):
+            count = 0
+            curI = img_gray[i][j]
+            CirleI = []
+
+            count = 0
+            for dx, dy in miniCircle:
+                if isActivePixel(img_gray[i+dx][j+dy], curI, treshold):
+                    count += 1
+            if count < 2:
+                continue
+
+            for dx,dy in bresenhamCircle:
+                CirleI.append(img_gray[i+dx][j+dy])
+
+            activePixels = [isActivePixel(a, curI, treshold) for a in CirleI]
+            
+            activePixels_ext = activePixels + activePixels[:15]
+            for num in activePixels_ext:
+                if num == 1:
+                    count += 1
+                    if count == n:
+                        output = cv.circle(output, (i, j), 2, (0, 0, 255), -1)
+                else:
+                    count = 0
+    return output
+
+img1 = FAST_Corners(img, n=10, treshold=15)
+img2 = Harris_Corners(img)
+cv.imshow('Image', np.hstack([img2, img1]))
 cv.waitKey(0)
 cv.destroyAllWindows()
