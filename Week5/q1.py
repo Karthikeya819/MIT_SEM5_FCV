@@ -29,13 +29,12 @@ def Harris_Corners(img:cv.Mat, ksize=3, threshold=0.01):
             
             R[i][j] = (ixx*iyy - (ixy**2)) - (ixx + iyy)
 
-    R = cv.normalize(R, None, 0, 255, cv.NORM_MINMAX)
-    out = img.copy()
-    R_thr = threshold * R.max()    
+    R = cv.normalize(R, None, 0, 1, cv.NORM_MINMAX)
+    out = img.copy()  
     
     for i in range(height):
         for j in range(width):
-            if R[i, j] > R_thr:
+            if R[i, j] > threshold:
                 cv.circle(out, (j, i), 2, (0, 0, 255), -1)
 
     return out
@@ -49,6 +48,7 @@ def FAST_Corners(img:cv.Mat, n=12, treshold=10):
 
     def isActivePixel(I, curI, treshold):
         return I > curI + treshold or I < curI - treshold
+  
     
     output = img.copy()
 
@@ -56,19 +56,17 @@ def FAST_Corners(img:cv.Mat, n=12, treshold=10):
         for j in range(3, width - 3):
             count = 0
             curI = img_gray[i][j]
-            CirleI = []
+            activePixels = []
 
             count = 0
             for dx, dy in miniCircle:
-                if isActivePixel(img_gray[i+dx][j+dy], curI, treshold):
+                if isActivePixel(int(img_gray[i+dx][j+dy]), int(curI), int(treshold)):
                     count += 1
             if count < 2:
                 continue
 
             for dx,dy in bresenhamCircle:
-                CirleI.append(img_gray[i+dx][j+dy])
-
-            activePixels = [isActivePixel(a, curI, treshold) for a in CirleI]
+                activePixels.append(isActivePixel(int(img_gray[i+dx][j+dy]), int(curI), int(treshold)))
             
             activePixels_ext = activePixels + activePixels[:15]
             for num in activePixels_ext:
@@ -78,9 +76,10 @@ def FAST_Corners(img:cv.Mat, n=12, treshold=10):
                         output = cv.circle(output, (i, j), 2, (0, 0, 255), -1)
                 else:
                     count = 0
+
     return output
 
-img1 = FAST_Corners(img, n=10, treshold=15)
+img1 = FAST_Corners(img.copy(), n=10, treshold=15)
 img2 = Harris_Corners(img)
 cv.imshow('Image', np.hstack([img2, img1]))
 cv.waitKey(0)
