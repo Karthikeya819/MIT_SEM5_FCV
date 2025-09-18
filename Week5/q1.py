@@ -54,7 +54,6 @@ def FAST_Corners(img:cv.Mat, n=12, treshold=10):
 
     for i in range(3, height - 3):
         for j in range(3, width - 3):
-            count = 0
             curI = img_gray[i][j]
             activePixels = []
 
